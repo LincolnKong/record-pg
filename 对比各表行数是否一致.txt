@@ -1,0 +1,25 @@
+for db in `psql --pset=pager=off -t -A -q -c 'select datname from pg_database where datname not in ($$template0$$, $$template1$$)'`
+do
+psql -d $db --pset=pager=off -q -c 'select current_database(),nspname,relname,relkind from pg_class a,pg_authid b,pg_namespace c where a.relnamespace=c.oid and a.relowner=b.oid and nspname !~ $$^pg_$$ and nspname !~ $$public$$ and nspname<>$$information_schema$$ and relkind= $$r$$ order by 1,2,3'
+done
+
+for tab in `psql -d klk6_db --pset=pager=off -t -A -q -c 'select nspname || $$.$$ || relname  from pg_class a,pg_authid b,pg_namespace c where a.relnamespace=c.oid and a.relowner=b.oid and nspname !~ $$^pg_$$ and nspname !~ $$public$$ and nspname<>$$information_schema$$ and relkind= $$r$$ order by 1'`
+do
+  export tab1=$tab
+  export db1='klk6_db'
+  psql -d klk6_db --pset=pager=off -t -A -q -c  "select '$db1',count(1) from $tab1"
+done
+
+
+
+
+for db in `psql --pset=pager=off -t -A -q -c 'select datname from pg_database where datname not in ($$template0$$, $$template1$$)'`
+do
+  for tab in `psql -d $db --pset=pager=off -t -A -q -c 'select nspname || $$.$$ || relname  from pg_class a,pg_authid b,pg_namespace c where a.relnamespace=c.oid and a.relowner=b.oid and nspname !~ $$^pg_$$ and nspname !~ $$public$$ and nspname<>$$information_schema$$ and relkind= $$r$$ order by 1'`
+  do
+    for tab in `psql -d $db --pset=pager=off -t -A -q -c 'select nspname || $$.$$ || relname  from pg_class a,pg_authid b,pg_namespace c where a.relnamespace=c.oid and a.relowner=b.oid and nspname !~ $$^pg_$$ and nspname !~ $$public$$ and nspname<>$$information_schema$$ and relkind= $$r$$ order by 1'`
+    do 
+      psql -d $db --pset=pager=off -t -A -q -c  "select '$db','$tab',count(1) from $tab order by 1"
+      done
+   done
+done
